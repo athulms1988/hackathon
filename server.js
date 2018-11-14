@@ -49,7 +49,116 @@ app.get('/useractivity', (req, res) => {
           });
         }
       });
-  });
+});
+
+app.get('/getcampaigndetails', (req, res) => {
+    var params = {
+        TableName: 'campaigntable'
+    };
+    documentClient.scan(params, function(err, data) {
+        if (err) {
+            console.log(err);
+            res.status(400).json({status: 400, message: 'error in fetching data'});
+        } else {
+            var successfullCampaign = 0;
+            var successfullChannels = {
+                "whatsapp": 0,
+                "email": 0,
+                "webpush": 0
+            };
+            var failedCampaign = 0;
+            var failedChannels = {
+                "whatsapp": 0,
+                "email": 0,
+                "webpush": 0
+            };
+            data.Items.forEach(function(element, index, array) {
+                if(element["status"] == 0) {
+                    successfullCampaign++;
+                    successfullChannels[element["channel"]] = successfullChannels[element["channel"]] + 1;
+                } else {
+                    failedCampaign++;
+                    failedChannels[element["channel"]] = failedChannels[element["channel"]] + 1;
+                }
+            });
+            var totalCampaigns = successfullCampaign + failedCampaign;
+            res.status(201).json({status: 200, data: { 
+                    totalCampaigns: totalCampaigns,
+                    successfullCampaign: {count: successfullCampaign, split: successfullChannels}, 
+                    failedCampaigned: {count: failedCampaign, split: failedChannels}
+                }
+            });
+        }
+    });
+});
+
+app.get('/getcampaigndetails/:status/:channel', (req, res) => {
+    var params;
+    if(req.params.status == "success") {
+        params = {
+            TableName: 'campaigntable',
+            IndexName: 'channel-index',
+            KeyConditionExpression: '#channel = :channel',
+            FilterExpression: "#status = :status",
+            ExpressionAttributeNames: {
+                '#status': 'status',
+                '#channel': 'channel'
+            },
+            ExpressionAttributeValues: {
+                ':status': 1,
+                ':channel': req.params.channel
+            }
+        };
+    } else {
+        params = {
+            TableName: 'campaigntable',
+            IndexName: 'channel-index',
+            KeyConditionExpression: '#channel = :channel',
+            FilterExpression: "#status = :status",
+            ExpressionAttributeNames: {
+                '#status': 'status',
+                '#channel': 'channel'
+            },
+            ExpressionAttributeValues: {
+                ':status': 0,
+                ':channel': req.params.channel
+            }
+        };
+    }
+    documentClient.query(params, function(err, data) {
+        if (err) {
+            console.log(err);
+            res.status(400).json({status: 400, message: 'error in fetching data'});
+        } else {
+            var userID = [];
+            data.Items.forEach(function(element, index, array) {
+                userID.push(element["userid"]);
+            });
+            var userIDObject = {};
+            var index = 0;
+            userID.forEach(function(value) {
+                index++;
+                var userIDKey = ":titlevalue"+index;
+                userIDObject[userIDKey.toString()] = value;
+            });
+
+            var params = {
+                TableName : "usertable",
+                FilterExpression : "id IN ("+Object.keys(userIDObject).toString()+ ")",
+                ExpressionAttributeValues : userIDObject
+            };
+            
+            documentClient.scan(params, function(err, data) {
+                if(err) {
+                    res.status(400).json({status: 400, message: 'error in fetching data'});
+                } else {
+                    res.status(201).json({status: 200, userlist: data.Items});
+                }
+            });
+        }
+     });
+    
+});
 
 app.use(require('express-static')('./'));
 
