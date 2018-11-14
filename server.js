@@ -3,6 +3,7 @@ const cors = require('cors')
 const AWS = require('aws-sdk');
 const app = express();
 const moment = require('moment');
+const fs = require('fs');
 app.use(cors())
 app.use(require('body-parser').json());
 
@@ -157,7 +158,49 @@ app.get('/getcampaigndetails/:status/:channel', (req, res) => {
             });
         }
      });
-    
+});
+
+app.get('/updatecampaign/:campaignid', (req, res) => {
+    var updateParams = {
+        TableName: 'campaigntable',
+        Key: { campaignid : req.params.campaignid },
+        UpdateExpression: 'set #status = :status',
+        ExpressionAttributeNames: {'#status' : 'status'},
+        ExpressionAttributeValues: {
+            ':status' : 1
+        }
+    };
+    documentClient.update(updateParams, function(err, data) {
+        if(err) {
+            res.status(400).json({status: 400, message: 'error in fetching data'});
+        } else {
+            res.status(201).json({status: 200, message: "Campaign details updated"});
+        }
+    });
+});
+
+app.get(['/logo','/logo/:campaignid'], (req, res) => {
+    if(req.params.campaignid) {
+        var updateParams = {
+            TableName: 'campaigntable',
+            Key: { campaignid : req.params.campaignid },
+            UpdateExpression: 'set #status = :status',
+            ExpressionAttributeNames: {'#status' : 'status'},
+            ExpressionAttributeValues: {
+                ':status' : 1
+            }
+        };
+        documentClient.update(updateParams, function(err, data) {
+            if(err) {
+                //console.log(err);
+            } else {
+                //console.log(data);
+            }
+        });
+    }
+    var img = fs.readFileSync('./logo.png');
+    res.writeHead(200, {'Content-Type': 'image/png' });
+    res.end(img, 'binary');
 });
 
 app.use(require('express-static')('./'));
