@@ -44,8 +44,10 @@ app.get('/useractivity', (req, res) => {
         } else {
           var currentTime = moment();
           var activeUserCount = 0;
-          var failyActiveUserCount = 0;
           var inactiveUserCount = 0;
+          var highlyInactive = 0;
+          var mediumInactive = 0;
+          var lowInactive = 0;
           data.Items.forEach(function(element, index, array) {
             var lastLogin = moment(element["last_login"],'DD/MM/YYYY');
             var dateDiff = 0;
@@ -54,18 +56,26 @@ app.get('/useractivity', (req, res) => {
             }
             if(dateDiff <= active) {
                 activeUserCount++;
-            } else if(dateDiff <= fairlyActive) {
-                failyActiveUserCount++;
             } else {
                 inactiveUserCount++;
+                if(dateDiff>=60 && dateDiff<=150 ){
+                    lowInactive++;
+                }else if(dateDiff>=150 && dateDiff<=180){
+                    mediumInactive++;
+                }else if(dateDiff>=180){
+                    highlyInactive++;
+                }
             }
             });
-          var totalCount = activeUserCount + failyActiveUserCount + inactiveUserCount;
+          var totalCount = activeUserCount + inactiveUserCount;
           res.status(201).json({status: 200, data: { 
             totalCount: totalCount, 
             activeUserCount: activeUserCount, 
-            failyActiveUserCount: failyActiveUserCount, 
-            inactiveUserCount: inactiveUserCount
+            inactiveUserCount: inactiveUserCount,
+            inactiveArray: [lowInactive,
+                mediumInactive,
+                highlyInactive
+            ]
             }
           });
         }
@@ -325,7 +335,6 @@ app.get('/getloyalitydetails', (req, res) => {
                 daysBooked = 10,
                 currentTime = moment(),
                 activeUserCount = 0,
-                failyActiveUserCount = 0,
                 inactiveUserCount = 0,
                 LoyalityCustomerList = [];
             data.Items.forEach(function (element, index, array) {
@@ -406,7 +415,7 @@ app.post('/triggercampaign', (req, res) => {
     } else {
         res.status(400).json({status: 400, message: 'invalid channel'});
     }
-});
+});        
 
 var sendEmail = function(campaignID, username, email) {
     var params = {
