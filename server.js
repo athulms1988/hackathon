@@ -1,11 +1,16 @@
 const express = require('express');
-const cors = require('cors')
+const cors = require('cors');
+const webpush = require('web-push');
 const AWS = require('aws-sdk');
 const app = express();
 const moment = require('moment');
+const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
+const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
+const emailid = process.env.EMAIL_ID;
 const fs = require('fs');
 app.use(cors())
 app.use(require('body-parser').json());
+webpush.setVapidDetails('mailto:'+emailid, publicVapidKey, privateVapidKey);
 
 const accessKeyID = process.env.ACCESS_KEY_ID;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
@@ -277,6 +282,21 @@ app.get('/resetcampaign', (req, res) => {
         }
     });
 });
+
+app.post('/subscribe', (req, res) => {
+    const subscription = req.body;
+    var params = {
+      TableName: 'webpushpoc',
+      Item: subscription
+    };
+  
+    documentClient.put(params, function(err, data) {
+      if (err) console.log(err);
+      else console.log(data);
+      res.status(201).json({});
+    });
+    
+  });
 
 app.get('/sendemail', (req, res) => {
     var params = {
