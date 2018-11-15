@@ -19,6 +19,17 @@ var documentClient = new AWS.DynamoDB.DocumentClient({accessKeyId: accessKeyID, 
 var ses = new AWS.SES({accessKeyId: accessKeyID, secretAccessKey: secretAccessKey, region: 'eu-west-1', apiVersion: '2010-12-01'});
 var active = process.env. ACTIVE_DAYS || 60;
 var fairlyActive = process.env. FAIRLY_ACTIVE_DAYS || 180;
+
+function createCampaignId() {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < 10; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
 app.get('/useractivity', (req, res) => {
     var params = {
         TableName : "usertable",
@@ -187,7 +198,7 @@ app.get('/updatecampaign/:campaignid', (req, res) => {
     });
 });
 
-app.get(['/logo','/logo/:campaignid'], (req, res) => {
+app.get('/logo/:campaignid', (req, res) => {
     if(req.params.campaignid) {
         var updateParams = {
             TableName: 'campaigntable',
@@ -368,6 +379,70 @@ app.get('/getloyalitydetails', (req, res) => {
         }
     });
 });
+
+app.post('/triggercampaign', (req, res) => {
+    var channel = req.body.channel;
+    var template = req.body.template == "birthday" ? req.body.template : "normal";
+    if(channel == "email" || channel == "whatsapp" || channel == "webpush") {
+        var params = {
+            TableName: 'usertable',
+            IndexName: 'is_actual_user-index',
+            KeyConditionExpression: '#is_actual_user = :is_actual_user',
+            ExpressionAttributeNames: {
+                '#is_actual_user': 'is_actual_user'
+            },
+            ExpressionAttributeValues: {
+                ':is_actual_user': 1
+            }
+        };
+        documentClient.query(params, function(err, data) {
+            if (err) {
+                res.status(400).json({status: 400, message: 'error in fetching actual users'});
+            } else {
+                res.status(200).json({status: 200, message: 'Campaign triggered'});
+                data.Items.forEach(function(element, index, array) {
+                    var campaignID = createCampaignId();
+                    if(channel == "email") {
+                        sendEmail(campaignID, element["email"]);
+                    } else if(channel == "webpush") {
+                        sendWebpush(campaignID);
+                    } else if(channel == "whatsapp") {
+                        sendWhatsapp(campaignID, element["mobile_no"]);
+                    }
+                    var campaignParam = {
+                        TableName: 'campaigntable',
+                        Item: {
+                            campaignid: campaignID,
+                            userid: element["id"],
+                            channel: channel,
+                            status: 0,
+                            date: moment().format("DD/MM/YYYY")
+                        }
+                    }
+
+                    documentClient.put(campaignParam, function(err, data) {
+                        if (err) {
+                            //console.log(err);
+                        } else {
+                            
+                        }
+                    });
+                });
+            }
+        });
+    } else {
+        res.status(400).json({status: 400, message: 'invalid channel'});
+    }
+});
+
+var sendEmail = function(campaignID, email) {
+}
+
+var sendWebpush = function(campaignID) {
+}
+
+var sendWhatsapp = function(campaignID, mobile) {
+}
 
 app.use(require('express-static')('./'));
 
