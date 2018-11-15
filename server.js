@@ -309,36 +309,6 @@ app.post('/subscribe', (req, res) => {
     
   });
 
-app.get('/sendemail', (req, res) => {
-    var params = {
-        Destination: {
-         ToAddresses: [
-            "athulms@gmail.com"
-         ]
-        }, 
-        Message: {
-         Body: {
-          Html: {
-           Charset: "UTF-8", 
-           Data: "<img src=\"http://hackathon-env.23kccc2pvp.ap-south-1.elasticbeanstalk.com/logo/1ZNvjD5VS8\"> <br> <h1>Dear Athul,</h1> It has been quite a long we have seen you on our website. There are some exicting offers for you. <a class=\"ulink\" href=\"https://carrentals.com?campaignid=1ZNvjD5VS8\" target=\"_blank\">Please click on the link</a>"
-          }, 
-          Text: {
-           Charset: "UTF-8", 
-           Data: "Dear Athul, It has been quite a long we have seen you on our website. There are some exicting offers for you. Please click on the link - https://carrentals.com?campaignid=1ZNvjD5VS8"
-          }
-         }, 
-         Subject: {
-          Charset: "UTF-8", 
-          Data: "Greetings from CarRentals.com"
-         }
-        }, 
-        Source: "athul.salimkumar@ibsplc.com"
-       };
-       ses.sendEmail(params, function(err, data) {
-         if (err) console.log(err, err.stack); // an error occurred
-         else     console.log(data);       
-       });
-});
 app.get('/getloyalitydetails', (req, res) => {
     var params = {
         TableName: "usertable",
@@ -403,11 +373,11 @@ app.post('/triggercampaign', (req, res) => {
                 data.Items.forEach(function(element, index, array) {
                     var campaignID = createCampaignId();
                     if(channel == "email") {
-                        sendEmail(campaignID, element["email"]);
+                        sendEmail(campaignID,  element["first_name"], element["email"]);
                     } else if(channel == "webpush") {
                         sendWebpush(campaignID);
                     } else if(channel == "whatsapp") {
-                        sendWhatsapp(campaignID, element["mobile_no"]);
+                        sendWhatsapp(campaignID, element["first_name"], element["mobile_no"]);
                     }
                     var campaignParam = {
                         TableName: 'campaigntable',
@@ -435,13 +405,66 @@ app.post('/triggercampaign', (req, res) => {
     }
 });
 
-var sendEmail = function(campaignID, email) {
+var sendEmail = function(campaignID, username, email) {
+    var params = {
+        Destination: {
+         ToAddresses: [
+            email
+         ]
+        }, 
+        Message: {
+         Body: {
+          Html: {
+           Charset: "UTF-8", 
+           Data: "<img src=\"http://hackathon-env.23kccc2pvp.ap-south-1.elasticbeanstalk.com/logo/"+campaignID+"\"> <br> <h1>Dear "+username+",</h1> It has been quite a long we have seen you on our website. There are some exicting offers for you. <a class=\"ulink\" href=\"https://carrentals.com?campaignid="+campaignID+"\" target=\"_blank\">Please click on the link</a>"
+          }, 
+          Text: {
+           Charset: "UTF-8", 
+           Data: "Dear "+username+", It has been quite a long we have seen you on our website. There are some exicting offers for you. Please click on the link - https://carrentals.com?campaignid="+campaignID
+          }
+         }, 
+         Subject: {
+          Charset: "UTF-8", 
+          Data: "Greetings from CarRentals.com"
+         }
+        }, 
+        Source: "athulms@gmail.com"
+       };
+       ses.sendEmail(params, function(err, data) {
+         if (err) console.log(err, err.stack); // an error occurred
+         else     console.log(data);       
+       });
 }
 
 var sendWebpush = function(campaignID) {
+    const payload = JSON.stringify({ title: "Hey from Carrentals", body: "There are some exicting offers waiting for you" });
+    var params = {
+        TableName: "webpush"
+    };
+    documentClient.scan(params, onScan);
+    function onScan(err, data) {
+        if (err) {
+            console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
+        } else {        
+            data.Items.forEach(function(itemdata) {
+              webpush.sendNotification(itemdata, payload).then(response => {
+                console.log(response);
+              }).catch(error => {
+                console.error(error);
+              });
+            });
+  
+            // continue scanning if we have more items
+            if (typeof data.LastEvaluatedKey != "undefined") {
+                params.ExclusiveStartKey = data.LastEvaluatedKey;
+                documentClient.scan(params, onScan);
+            }
+        }
+    }
 }
 
-var sendWhatsapp = function(campaignID, mobile) {
+var sendWhatsapp = function(campaignID, username, mobile) {
+    
 }
 
 app.use(require('express-static')('./'));
