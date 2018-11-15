@@ -428,11 +428,11 @@ var sendEmail = function(campaignID, username, email) {
          Body: {
           Html: {
            Charset: "UTF-8", 
-           Data: "<img src=\"http://hackathon-env.23kccc2pvp.ap-south-1.elasticbeanstalk.com/logo/"+campaignID+"\"> <br> <h1>Dear "+username+",</h1> It has been quite a long we have seen you on our website. There are some exicting offers for you. <a class=\"ulink\" href=\"https://carrentals.com?campaignid="+campaignID+"\" target=\"_blank\">Please click on the link</a>"
+           Data: "<img src=\"http://hackathon-env.23kccc2pvp.ap-south-1.elasticbeanstalk.com/logo/"+campaignID+"\"> <br> <h1>Dear "+username+",</h1> It has been quite a long we have seen you on our website. There are some exciting offers for you. <a class=\"ulink\" href=\"https://carrentals.com?campaignid="+campaignID+"\" target=\"_blank\">Please click on the link</a>"
           }, 
           Text: {
            Charset: "UTF-8", 
-           Data: "Dear "+username+", It has been quite a long we have seen you on our website. There are some exicting offers for you. Please click on the link - https://carrentals.com?campaignid="+campaignID
+           Data: "Dear "+username+", It has been quite a long we have seen you on our website. There are some exciting offers for you. Please click on the link - https://carrentals.com?campaignid="+campaignID
           }
          }, 
          Subject: {
@@ -449,7 +449,7 @@ var sendEmail = function(campaignID, username, email) {
 }
 
 var sendWebpush = function(campaignID) {
-    const payload = JSON.stringify({ title: "Hey from Carrentals", body: "There are some exicting offers waiting for you" });
+    const payload = JSON.stringify({ title: "Hey from Carrentals", body: "There are some exciting offers waiting for you" });
     var params = {
         TableName: "webpush"
     };
@@ -478,7 +478,7 @@ var sendWebpush = function(campaignID) {
 var sendWhatsapp = function(campaignID, username, mobile) {
     client.messages
       .create({
-        body: 'Hello '+username+"! There are some many exciting offers waiting for you in carrentals. https://carrentals.com?campaignid="+campaignID,
+        body: 'Hello '+username+"! There are some exciting offers waiting for you in carrentals. https://carrentals.com?campaignid="+campaignID,
         from: 'whatsapp:+14155238886',
         to: 'whatsapp:+91'+mobile
       })
