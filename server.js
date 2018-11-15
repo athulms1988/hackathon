@@ -11,6 +11,7 @@ const accessKeyID = process.env.ACCESS_KEY_ID;
 const secretAccessKey = process.env.SECRET_ACCESS_KEY;
 const region = process.env.REGION;
 var documentClient = new AWS.DynamoDB.DocumentClient({accessKeyId: accessKeyID, secretAccessKey: secretAccessKey, region: region, apiVersion: '2012-10-08'});
+var ses = new AWS.SES({accessKeyId: accessKeyID, secretAccessKey: secretAccessKey, region: 'eu-west-1', apiVersion: '2010-12-01'});
 var active = process.env. ACTIVE_DAYS || 60;
 var fairlyActive = process.env. FAIRLY_ACTIVE_DAYS || 180;
 app.get('/useractivity', (req, res) => {
@@ -165,8 +166,10 @@ app.get('/updatecampaign/:campaignid', (req, res) => {
         TableName: 'campaigntable',
         Key: { campaignid : req.params.campaignid },
         UpdateExpression: 'set #status = :status',
-        ExpressionAttributeNames: {'#status' : 'status'},
+        ConditionExpression: '#campaignid = :campaignid',
+        ExpressionAttributeNames: {'#campaignid': 'campaignid', '#status' : 'status'},
         ExpressionAttributeValues: {
+            ':campaignid': req.params.campaignid,
             ':status' : 1
         }
     };
@@ -201,6 +204,41 @@ app.get(['/logo','/logo/:campaignid'], (req, res) => {
     var img = fs.readFileSync('./logo.png');
     res.writeHead(200, {'Content-Type': 'image/png' });
     res.end(img, 'binary');
+});
+
+app.get('/resetcampaign', (req, res) => {
+
+});
+
+app.get('/sendemail', (req, res) => {
+    var params = {
+        Destination: {
+         ToAddresses: [
+            "athulms@gmail.com"
+         ]
+        }, 
+        Message: {
+         Body: {
+          Html: {
+           Charset: "UTF-8", 
+           Data: "<img src=\"http://hackathon-env.23kccc2pvp.ap-south-1.elasticbeanstalk.com/logo/1ZNvjD5VS8\"> <br> <h1>Dear Athul,</h1> It has been quite a long we have seen you on our website. There are some exicting offers for you. <a class=\"ulink\" href=\"https://carrentals.com?campaignid=1ZNvjD5VS8\" target=\"_blank\">Please click on the link</a>"
+          }, 
+          Text: {
+           Charset: "UTF-8", 
+           Data: "Dear Athul, It has been quite a long we have seen you on our website. There are some exicting offers for you. Please click on the link - https://carrentals.com?campaignid=1ZNvjD5VS8"
+          }
+         }, 
+         Subject: {
+          Charset: "UTF-8", 
+          Data: "Greetings from CarRentals.com"
+         }
+        }, 
+        Source: "athul.salimkumar@ibsplc.com"
+       };
+       ses.sendEmail(params, function(err, data) {
+         if (err) console.log(err, err.stack); // an error occurred
+         else     console.log(data);       
+       });
 });
 
 app.use(require('express-static')('./'));
