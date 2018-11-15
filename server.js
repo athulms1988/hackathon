@@ -449,7 +449,7 @@ var sendEmail = function(campaignID, username, email) {
 }
 
 var sendWebpush = function(campaignID) {
-    const payload = JSON.stringify({ title: "Hey from Carrentals", body: "There are some exciting offers waiting for you" });
+    const payload = JSON.stringify({ title: "Hey from Carrentals", body: "There are some exciting offers waiting for you", url: "https://carrentals.com?campaignid="+campaignID });
     var params = {
         TableName: "webpush"
     };
