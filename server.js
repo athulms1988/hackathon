@@ -140,7 +140,7 @@ app.get('/getcampaigndetails/:status/:channel', (req, res) => {
             var index = 0;
             userID.forEach(function(value) {
                 index++;
-                var userIDKey = ":titlevalue"+index;
+                var userIDKey = ":userid"+index;
                 userIDObject[userIDKey.toString()] = value;
             });
 
@@ -207,7 +207,75 @@ app.get(['/logo','/logo/:campaignid'], (req, res) => {
 });
 
 app.get('/resetcampaign', (req, res) => {
+    var params = {
+        TableName: 'usertable',
+        IndexName: 'is_actual_user-index',
+        KeyConditionExpression: '#is_actual_user = :is_actual_user',
+        ExpressionAttributeNames: {
+            '#is_actual_user': 'is_actual_user'
+        },
+        ExpressionAttributeValues: {
+            ':is_actual_user': 1
+        }
+    };
+    documentClient.query(params, function(err, data) {
+        if (err) {
+            res.status(400).json({status: 400, message: 'error in fetching data'});
+        } else {
+            var userID = [];
+            data.Items.forEach(function(element, index, array) {
+                userID.push(element["id"]);
+            });
+            var userIDObject = {};
+            var index = 0;
+            userID.forEach(function(value) {
+                index++;
+                var userIDKey = ":userid"+index;
+                userIDObject[userIDKey.toString()] = value;
+            });
+            
+            var params = {
+                TableName : "campaigntable",
+                FilterExpression : "userid IN ("+Object.keys(userIDObject).toString()+ ")",
+                ExpressionAttributeValues : userIDObject
+            };
+            
+            documentClient.scan(params, function(err, data) {
+                if(err) {
+                    res.status(400).json({status: 400, message: 'error in fetching data'});
+                } else {
+                    var campaignids = [];
+                    data.Items.forEach(function(element, index, array) {
+                        campaignids.push(
+                        {
+                            DeleteRequest : {
+                                Key : {
+                                    'campaignid' : element["campaignid"]   
+                                }
+                            }
+                        });
+                    });
+                    if(campaignids.length > 0) {
+                        var deleteParams = {
+                            RequestItems : {
+                                'campaigntable' : campaignids
+                            }
+                        };
+                        documentClient.batchWrite(deleteParams, function(err, data) {
+                            if (err) {
+                                res.status(400).json({status: 400, message: 'error in fetching data'});
+                            } else {
+                                res.status(201).json({status: 200, message: "Reseted campaign for actual users"});
+                            }
+                        });
+                    } else {
+                        res.status(201).json({status: 200, message: "No campaigns to reset"});
+                    }
+                }
+            });
 
+        }
+    });
 });
 
 app.get('/sendemail', (req, res) => {
