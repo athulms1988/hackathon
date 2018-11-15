@@ -308,6 +308,46 @@ app.get('/sendemail', (req, res) => {
          else     console.log(data);       
        });
 });
+app.get('/getloyalityDetails', (req, res) => {
+    var params = {
+        TableName: "usertable",
+    };
+    documentClient.scan(params, function (err, data) {
+        if (err) {
+            console.log(err);
+            res.status(400).json({ status: 400, message: 'error in fetching data' });
+        } else {
+            var no_of_bookings = 5,
+                daysBooked = 10,
+                currentTime = moment(),
+                activeUserCount = 0,
+                failyActiveUserCount = 0,
+                inactiveUserCount = 0,
+                LoyalityCustomerList = [];
+            data.Items.forEach(function (element, index, array) {
+                var lastLogin = moment(element["last_login"], 'DD/MM/YYYY'),
+                    dateDiff = 0,
+                    numBook = element["no_of_bookings"],
+                    daysBook = element["days_booked"];
+                if (lastLogin) {
+                    dateDiff = currentTime.diff(lastLogin, 'days');
+                }
+                if (dateDiff <= active) {
+                    if (numBook >= no_of_bookings && daysBook >= daysBooked) {
+                        LoyalityCustomerList.push(element);
+                    }
+
+                }
+            });
+            res.status(201).json({
+                status: 200, data: {
+                    count: LoyalityCustomerList.length,
+                    userlist: LoyalityCustomerList
+                }
+            });
+        }
+    });
+});
 
 app.use(require('express-static')('./'));
 
