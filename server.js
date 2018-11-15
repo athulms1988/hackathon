@@ -4,6 +4,9 @@ const webpush = require('web-push');
 const AWS = require('aws-sdk');
 const app = express();
 const moment = require('moment');
+const accountSid = 'ACf330804c8b7d0b3e1247499b7e1bd23e';
+const authToken = '9fa4d1a423c180b8be00c5e5ae56af15';
+const client = require('twilio')(accountSid, authToken);
 const publicVapidKey = process.env.PUBLIC_VAPID_KEY;
 const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
 const emailid = process.env.EMAIL_ID;
@@ -428,7 +431,7 @@ var sendEmail = function(campaignID, username, email) {
           Data: "Greetings from CarRentals.com"
          }
         }, 
-        Source: "athulms@gmail.com"
+        Source: "offers.carrentals@gmail.com"
        };
        ses.sendEmail(params, function(err, data) {
          if (err) console.log(err, err.stack); // an error occurred
@@ -464,7 +467,14 @@ var sendWebpush = function(campaignID) {
 }
 
 var sendWhatsapp = function(campaignID, username, mobile) {
-    
+    client.messages
+      .create({
+        body: 'Hello '+username+"! There are some many exciting offers waiting for you in carrentals. https://carrentals.com?campaignid="+campaignID,
+        from: 'whatsapp:+14155238886',
+        to: 'whatsapp:+91'+mobile
+      })
+      .then(message => console.log(message.sid))
+      .done();
 }
 
 app.use(require('express-static')('./'));
