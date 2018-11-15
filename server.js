@@ -286,7 +286,7 @@ app.get('/resetcampaign', (req, res) => {
 app.post('/subscribe', (req, res) => {
     const subscription = req.body;
     var params = {
-      TableName: 'webpushpoc',
+      TableName: 'webpush',
       Item: subscription
     };
   
@@ -328,7 +328,7 @@ app.get('/sendemail', (req, res) => {
          else     console.log(data);       
        });
 });
-app.get('/getloyalityDetails', (req, res) => {
+app.get('/getloyalitydetails', (req, res) => {
     var params = {
         TableName: "usertable",
     };
