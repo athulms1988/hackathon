@@ -480,7 +480,7 @@ var sendWhatsapp = function(campaignID, username, mobile) {
       .create({
         body: 'Hello '+username+"! There are some exciting offers waiting for you in carrentals. https://carrentals.com?campaignid="+campaignID,
         from: 'whatsapp:+14155238886',
-        to: 'whatsapp:+91'+mobile
+        to: 'whatsapp:+'+mobile
       })
       .then(message => console.log(message.sid))
       .done();
