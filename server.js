@@ -21,7 +21,7 @@ const region = process.env.REGION;
 var documentClient = new AWS.DynamoDB.DocumentClient({accessKeyId: accessKeyID, secretAccessKey: secretAccessKey, region: region, apiVersion: '2012-10-08'});
 var ses = new AWS.SES({accessKeyId: accessKeyID, secretAccessKey: secretAccessKey, region: 'eu-west-1', apiVersion: '2010-12-01'});
 var active = process.env. ACTIVE_DAYS || 60;
-var fairlyActive = process.env. FAIRLY_ACTIVE_DAYS || 180;
+var fairlyActive = process.env. FAIRLY_ACTIVE_DAYS || 180 || 200;
 
 function createCampaignId() {
     var text = "";
