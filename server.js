@@ -1,6 +1,5 @@
 const express = require('express');
 
-
 const cors = require('cors');
 const webpush = require('web-push');
 const AWS = require('aws-sdk');
