@@ -22,7 +22,7 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "express-static": "^1.2.6",
-    "moment": "^2.22.2",
+    "moment": "^2.29.4",
     "twilio": "^3.23.2",
     "web-push": "^3.3.3"
   }
