@@ -18,9 +18,9 @@
   "homepage": "https://github.com/athulms1988/hackathon#readme",
   "dependencies": {
     "aws-sdk": "^2.355.0",
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.20.1",
     "cors": "^2.8.5",
-    "express": "^4.16.4",
+    "express": "^4.18.2",
     "express-static": "^1.2.6",
     "moment": "^2.22.2",
     "twilio": "^3.23.2",
